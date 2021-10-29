@@ -7,7 +7,6 @@ class ConsumerGoods(BaseModel):
     name: str
     created_at: datetime
     price: int
-    sold: int
 
     @validator('name')
     def name_must_not_be_empty(cls, value):

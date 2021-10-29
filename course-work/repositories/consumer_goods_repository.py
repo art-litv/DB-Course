@@ -9,11 +9,11 @@ class ConsumerGoodsRepository(Repository):
         'get_consumers_goods': ("SELECT * FROM consumers_goods"),
 
         'get_consumer_goods': ("SELECT FROM consumers_goods"
-                               "WHERE id = %s"),
+                               "WHERE id = %(id)s"),
 
         'insert_consumer_goods': ("INSERT INTO consumers_goods"
-                                  "(name, price, sold)"
-                                  "VALUES (%(name)s, %(price)s, %(sold)s)")
+                                  "(name, price)"
+                                  "VALUES (%(name)s, %(price)s)")
     }
 
     def get_consumers_goods(self):
