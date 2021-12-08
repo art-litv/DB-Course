@@ -1,47 +1,23 @@
-import psycopg2
 import inspect
 from pprint import pprint
 from time import time
 import os
 
 import models
-from config import host, user, password, db_name
 from logger import Logger
 
-from repository import Repository
 from controller import Controller
 from view import View
 
 
-def get_connection(host, user, password, db_name):
-    return psycopg2.connect(
-        host=host,
-        user=user,
-        password=password,
-        database=db_name
-    )
-
-
-def start_session():
-    connection = get_connection(host, user, password, db_name)
-    session = Session(connection)
-    session.start()
-
-
 class Session:
 
-    def __init__(self, connection):
-        self.__connection = connection
-
     def start(self):
-        connection = get_connection(host, user, password, db_name)
-        Logger.log_info("PostgreSQL connection opened")
         while True:
             try:
                 model_type = input('Input model type: ')
                 model = self.search_model(model_type)
-                controller = Controller(
-                    Repository(connection, model), View())
+                controller = Controller(model, View())
                 while True:
                     command = input(
                         'Enter a command (\'help\' for all commands): ')
@@ -50,8 +26,12 @@ class Session:
                     try:
                         self.dispatch_command(controller, command)
                     except Exception as _ex:
-                        continue
+                        #raise _ex
+                        Logger.log_error(_ex)
+                    continue
             except Exception as _ex:
+                #raise _ex
+                Logger.log_error(_ex)
                 continue
 
     def exit(self):
@@ -72,9 +52,6 @@ class Session:
             'insert_item': controller.insert_item,
             'update_item': controller.update_item,
             'delete_item': controller.delete_item,
-            'generate_items_with_db': controller.generate_items_with_db,
-            'generate_items_from_dataset': controller.generate_items_from_dataset,
-            'generate_items_from_network': controller.generate_items_from_network,
             'switch_model': '',
         }
         commands['help'] = pprint
@@ -105,4 +82,5 @@ class Session:
 
 
 if __name__ == '__main__':
-    start_session()
+    session = Session()
+    session.start()
