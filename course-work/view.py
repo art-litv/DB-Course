@@ -18,8 +18,8 @@ class View():
         print(f'pages: {page} of {total_pages}')
 
     @staticmethod
-    def show_item(item, item_name):
-        print('Item of {} with id {} found'.format(item_name, item.id))
+    def show_item(item, item_name, item_id):
+        print('Item of {} with id {} found'.format(item_name, item_id))
         Logger.log_info(item)
 
     @staticmethod

@@ -87,3 +87,5 @@ class Controller():
 
     def __del__(self):
         self.session.close()
+
+

@@ -1,47 +1,24 @@
-import psycopg2
 import inspect
 from pprint import pprint
 from time import time
+from datetime import datetime
 import os
 
 import models
-from config import host, user, password, db_name
 from logger import Logger
 
-from repository import Repository
 from controller import Controller
 from view import View
 
 
-def get_connection(host, user, password, db_name):
-    return psycopg2.connect(
-        host=host,
-        user=user,
-        password=password,
-        database=db_name
-    )
-
-
-def start_session():
-    connection = get_connection(host, user, password, db_name)
-    session = Session(connection)
-    session.start()
-
-
 class Session:
 
-    def __init__(self, connection):
-        self.__connection = connection
-
     def start(self):
-        connection = get_connection(host, user, password, db_name)
-        Logger.log_info("PostgreSQL connection opened")
         while True:
             try:
                 model_type = input('Input model type: ')
                 model = self.search_model(model_type)
-                controller = Controller(
-                    Repository(connection, model), View())
+                controller = Controller(model, View())
                 while True:
                     command = input(
                         'Enter a command (\'help\' for all commands): ')
@@ -50,14 +27,9 @@ class Session:
                     try:
                         self.dispatch_command(controller, command)
                     except Exception as _ex:
-                        continue
+                        Logger.log_error(_ex)
             except Exception as _ex:
-                continue
-
-    def exit(self):
-        self.__connection.close()
-        Logger.log_info("PostgreSQL connection closed")
-        quit()
+                Logger.log_error(_ex)
 
     def switch_model(self):
         self.__connection.close()
@@ -65,7 +37,7 @@ class Session:
 
     def get_commands(self, controller):
         commands = {
-            'exit': self.exit,
+            'exit': quit,
             'show_items': controller.show_items,
             'show_item': controller.show_item,
             'show_filtered_items': controller.show_filtered_items,
@@ -75,6 +47,8 @@ class Session:
             'generate_items_with_db': controller.generate_items_with_db,
             'generate_items_from_dataset': controller.generate_items_from_dataset,
             'generate_items_from_network': controller.generate_items_from_network,
+            'predict_item_price': controller.predict_item_price,
+            'build_product_price_plot': controller.build_product_price_plot,
             'switch_model': '',
         }
         commands['help'] = pprint
@@ -94,6 +68,11 @@ class Session:
             commands[command](command_param)
             end_time = time()
             Logger.log_info(f'Filtration time: {end_time - start_time}')
+        elif command == 'predict_item_price':
+            product_id = command_parts[1]
+            prediction_date = datetime.strptime(command_parts[2], "%Y-%m-%d") if len(
+                command_parts) == 3 else datetime.now()
+            commands[command](product_id, prediction_date)
         else:
             commands[command](command_param)
 
@@ -105,4 +84,5 @@ class Session:
 
 
 if __name__ == '__main__':
-    start_session()
+    session = Session()
+    session.start()
